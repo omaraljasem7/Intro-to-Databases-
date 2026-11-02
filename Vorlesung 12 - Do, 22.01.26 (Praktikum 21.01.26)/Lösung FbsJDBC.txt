@@ -1,0 +1,45 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.net.URI;
+
+public class FbsJDBC {
+    public static void main(String[] args) {
+
+        String url = "postgresql://ga8gg8LB:28316f6d-76e3-46ea-bc90-a34c4f08b345@feedback.mni.thm.de:4321/ga8gg8LB";
+        String sqlQuery = "SELECT * FROM person";
+
+        URI parsedURL = URI.create(url);
+        String[] user = parsedURL.getUserInfo().split(":");
+        String jdbcURL = String.format("jdbc:postgresql://%s:%d%s?user=%s&password=%s", parsedURL.getHost(), parsedURL.getPort(), parsedURL.getPath(), user[0], user[1]);
+
+        try {
+            Connection conn = DriverManager.getConnection(jdbcURL);
+            Statement stmt = conn.createStatement();
+            ResultSet resultSet = stmt.executeQuery(sqlQuery);
+            ResultSetMetaData rsmd = resultSet.getMetaData();
+            int columnsNumber = rsmd.getColumnCount();
+
+            while (resultSet.next()) {
+                for (int i = 1; i <= columnsNumber; i++) {
+                    if (i > 1) {
+                        System.out.print(",  ");
+                    }
+                    String columnValue = resultSet.getString(i);
+                    System.out.print(columnValue + " " + rsmd.getColumnName(i));
+                }
+                System.out.println("");
+            }
+
+            resultSet.close();
+            stmt.close();
+            conn.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+} 

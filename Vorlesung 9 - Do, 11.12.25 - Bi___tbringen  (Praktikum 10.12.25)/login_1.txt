@@ -1,0 +1,34 @@
+<?php
+
+$db = new mysqli('localhost', 'root', '', 'adressbuch');
+$username = $_POST['username'];
+$password = $_POST['password'];
+
+// $erg = $db->query(
+//       "SELECT * FROM auth where" . 
+//	   " login = '" . $username . "' and " .
+//	   " pass = '" . $password . "'" 
+//                   ) or die( $db->error); 
+$stmt = $db->prepare("Select * FROM auth where login = ? and pass = ?");
+$stmt->bind_param("ss",$username,$password);
+$stmt->execute() or die($db->error);
+$erg = $stmt->get_result();
+
+if (! $erg->num_rows) { 
+  die ("User unbekannt");
+}
+ 
+$erg = $db->query(
+       "SELECT id, vorname, nachname FROM bekannte"
+                                 ) or die( $db->error); 
+if ($erg->num_rows) { 
+  echo "<p>Daten vorhanden: Anzahl "; 
+  echo $erg->num_rows; 
+} 
+while ($zeile = $erg->fetch_assoc()) { 
+  echo '<br>' . $zeile['vorname'] .' '. $zeile['nachname'] ; 
+}
+$erg->free();  
+$db->close();
+?>
+

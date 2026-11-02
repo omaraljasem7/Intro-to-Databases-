@@ -1,0 +1,100 @@
+SELECT * 
+FROM hotel;
+
+SELECT hname, ort 
+FROM hotel;
+
+SELECT hname 
+FROM hotel
+WHERE ort = 'Gießen';
+
+SELECT hotel.honr, hotel.hname, zimmer.znr
+FROM hotel, zimmer
+WHERE hotel.honr = zimmer.honr;
+
+SELECT h.honr, h.hname, z.znr
+FROM hotel h, zimmer z
+WHERE h.honr = z.honr;
+
+SELECT h.honr, h.hname, z.znr
+FROM hotel h JOIN zimmer z ON h.honr = z.honr;
+
+SELECT h.honr, h.hname, n.anr, a.bezeichnung
+FROM hotel h, normal n, ausstattung a
+WHERE h.honr = n.honr and n.anr = a.anr;
+
+SELECT h.honr, h.hname, n.anr, a.bezeichnung 
+FROM hotel h JOIN normal n ON h.honr = n.honr 
+             JOIN ausstattung a ON n.anr = a.anr;
+
+SELECT g.gnr, g.name, r.rnr
+FROM gast g LEFT JOIN reservierung r USING (gnr);
+
+SELECT DISTINCT h.honr, h.hname, n.anr, a.bezeichnung 
+FROM hotel h JOIN normal n USING (honr) 
+             JOIN ausstattung a USING (anr);
+
+
+SELECT DISTINCT h.honr, h.hname, n.anr, a.bezeichnung 
+FROM hotel h JOIN normal n USING (honr) 
+             JOIN ausstattung a USING (anr)
+ORDER by h.honr ASC;
+
+
+SELECT z.znr, z.zname, z.honr, n.anr
+FROM zimmer z JOIN normal n USING (znr, honr)
+ORDER BY z.honr ASC, z.znr DESC;
+
+
+SELECT *
+FROM zimmer z JOIN normal n USING (znr, honr);
+
+SELECT hname 
+FROM hotel
+WHERE ort = 'Gießen';
+
+
+SELECT hname 
+FROM hotel
+WHERE ort LIKE 'G%';
+
+SELECT hname 
+FROM hotel
+WHERE ort LIKE '_i%';
+
+
+SELECT g.name, g.vorname
+FROM gast g JOIN reservierung r USING (gnr) 
+            JOIN rposition rp USING (rnr) 
+            JOIN hotel h ON h.honr = rp.honr
+WHERE h.hname='Hotel Adlon';
+
+
+SELECT g.name, g.vorname
+FROM gast g
+WHERE g.gnr NOT IN ( 0 );
+
+
+SELECT a.hname, b.hname, a.ort
+FROM hotel a, hotel b
+WHERE a.ort=b.ort;
+
+
+SELECT g.gnr, g.name, h.honr, h.hname, e.honr, e.hname
+FROM gast g JOIN reservierung r USING (gnr) 
+            JOIN rposition rp USING (rnr) 
+            JOIN hotel e ON e.honr = r.honr
+            JOIN hotel h ON h.honr = rp.honr;
+
+SELECT g.gnr, g.name, z.preis*(rp.bis-rp.von) 
+FROM gast g JOIN reservierung r USING (gnr) 
+            JOIN rposition rp USING (rnr) 
+            JOIN zimmer z ON z.honr = rp.honr AND z.znr = rp.znr;
+
+
+
+
+
+
+
+

@@ -1,0 +1,145 @@
+
+SELECT COUNT(*)
+FROM hotel;
+
+SELECT COUNT(ort)
+FROM hotel;
+
+
+SELECT COUNT(DISTINCT ort)
+FROM hotel;
+
+
+SELECT MAX(preis)
+FROM zimmer;
+
+
+SELECT MAX(preis), honr
+FROM zimmer
+GROUP BY honr;
+
+
+SELECT h.honr, h.hname
+FROM zimmer z JOIN hotel h USING (honr)
+WHERE z.preis=485
+
+SELECT h.honr, h.hname
+FROM zimmer z JOIN hotel h USING (honr)
+WHERE z.preis IN (485)
+
+
+SELECT h.honr, h.hname
+FROM zimmer z JOIN hotel h USING (honr)
+WHERE z.preis IN (
+	SELECT MAX(preis) 
+	FROM zimmer);
+
+
+SELECT h.honr, h.hname, z.znr, z.zname, z.preis
+FROM zimmer z JOIN hotel h USING (honr)
+WHERE (z.honr, z.preis) IN (
+	SELECT z.honr, MAX(preis) 
+	FROM zimmer z
+	GROUP BY z.honr);
+
+
+SELECT h.honr, h.hname
+FROM hotel h JOIN zimmer z USING (honr)
+GROUP BY h.honr, h.hname
+HAVING MAX(z.preis) < 150;
+
+
+
+SELECT g.gnr, g.name, SUM(z.preis*(rp.bis-rp.von)) AS umsatz
+FROM gast g JOIN reservierung r USING (gnr) 
+            JOIN rposition rp USING (rnr) 
+            JOIN zimmer z ON z.honr = rp.honr AND z.znr = rp.znr
+GROUP BY g.gnr, g.name;
+
+
+
+SELECT g.gnr, g.name, SUM(z.preis*(rp.bis-rp.von)) AS umsatz
+FROM gast g LEFT JOIN reservierung r USING (gnr) 
+            LEFT JOIN rposition rp USING (rnr) 
+            LEFT JOIN zimmer z ON 
+                      z.honr = rp.honr AND z.znr = rp.znr
+GROUP BY g.gnr, g.name;
+
+
+
+SELECT g.gnr, g.name, SUM(z.preis*(rp.bis-rp.von)) AS umsatz
+FROM gast g JOIN reservierung r USING (gnr) 
+            JOIN rposition rp USING (rnr) 
+            JOIN zimmer z ON z.honr = rp.honr AND z.znr = rp.znr
+GROUP BY g.gnr, g.name
+UNION
+SELECT g.gnr, g.name, 0
+FROM gast g
+WHERE g.gnr NOT IN (SELECT r.gnr FROM reservierung r);
+
+
+CREATE VIEW kundenumsatz AS
+SELECT g.gnr, g.name, CASE (SUM(z.preis*(rp.bis-rp.von)) IS NULL)
+                      WHEN true
+                      THEN 0 
+                      ELSE SUM(z.preis*(rp.bis-rp.von)) END
+                      AS umsatz
+FROM gast g LEFT JOIN reservierung r USING (gnr) 
+            LEFT JOIN rposition rp USING (rnr) 
+            LEFT JOIN zimmer z ON 
+                      z.honr = rp.honr AND z.znr = rp.znr
+GROUP BY g.gnr, g.name;
+
+
+Drop VIEW anzahl_res
+
+CREATE VIEW anzahl_res (honr, anzahl) AS
+SELECT rp.honr, COUNT(*)
+FROM rposition rp
+GROUP BY rp.honr;
+
+
+SELECT a.honr, a.anzahl, h.hname
+FROM anzahl_res a JOIN hotel h USING (honr)
+WHERE a.anzahl IN (SELECT MAX(anzahl) FROM anzahl_res);
+
+
+CREATE TABLE altgaeste (gnr INT, gname VARCHAR(255))
+
+SELECT * FROM altgaeste
+
+CREATE PROCEDURE gaestesichern()
+LANGUAGE plpgsql 
+AS $$ 
+DECLARE 
+  gastname CHAR(50);
+  gastnr INTEGER;
+  finished BOOLEAN DEFAULT FALSE;
+  gastcursor CURSOR FOR SELECT name, gnr FROM gast;
+BEGIN
+  OPEN gastcursor;
+  WHILE NOT finished LOOP
+    FETCH gastcursor INTO gastname, gastnr;
+    IF FOUND THEN
+       INSERT INTO altgaeste (gnr, gname) 
+                   VALUES (gastnr, gastname);
+    ELSE finished := TRUE;
+    END IF;
+  END LOOP;
+  CLOSE gastcursor;
+END $$;
+
+CALL gaestesichern()
+
+SELECT * FROM altgaeste
+
+DROP TABLE altgaeste;
+DROP PROCEDURE  gaestesichern()
+
+
+
+
+
+
+
+

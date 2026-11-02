@@ -1,0 +1,58 @@
+
+-- Bei Server 1 und 2 eine Datenbank versandhandel anlegen
+
+ -- SERVER 1:
+create table Kunden (
+	id serial,
+	vorname VARCHAR(50),
+	nachname VARCHAR(50),
+	email VARCHAR(80),
+	strasse VARCHAR(80),
+	plz VARCHAR(50),
+	stadt VARCHAR(50),
+	land VARCHAR(50)
+) PARTITION by range (id);
+
+-- JETZT KUNDEN EINFÜGEN: Fehler - keine Partitionen
+
+CREATE EXTENSION postgres_fdw;
+
+CREATE SERVER postgres_2 FOREIGN DATA WRAPPER postgres_fdw
+    OPTIONS (dbname 'versandhandel', host 'postgres2.db', port 
+    '5432');
+
+CREATE USER MAPPING for postgres SERVER postgres_2 
+    OPTIONS (user 'postgres', password 'sicherespasswort');
+
+
+-- UPPER bound exclusive
+create table kunden_1_500 partition of kunden for values from (1) TO (501);
+create table kunden_1001 partition of kunden DEFAULT;
+
+
+------------------- SERVER 2
+
+create table kunden_501_1000 (
+	id serial,
+	vorname VARCHAR(50),
+	nachname VARCHAR(50),
+	email VARCHAR(80),
+	strasse VARCHAR(80),
+	plz VARCHAR(50),
+	stadt VARCHAR(50),
+	land VARCHAR(50)
+);
+
+------------------- SERVER 1
+
+select * from kunden; 
+
+CREATE FOREIGN TABLE kunden_501_1000 partition of kunden for values from (501) TO (1001)
+    SERVER postgres_2;
+
+-- Jetzt kunden.sql einfügen.
+
+-- Dann: 
+--       select * from kunden   
+--       select * from kunden_1_500
+--       select * from kunden_501_1000  -- auch auf Server 2.
